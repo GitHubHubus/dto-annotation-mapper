@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Helper\DTO\Annotation;
+namespace App\Helper\Annotation;
 
 /**
  * @Annotation

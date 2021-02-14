@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Helper\DTO;
+namespace App\Helper;
 
 interface MapperInterface
 {
