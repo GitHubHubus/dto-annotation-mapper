@@ -8,10 +8,12 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\EntityManagerInterface;
 use OK\Dto\Annotation\DTO;
 use OK\Dto\Exception\MapperInvalidTypeException;
+use OK\Dto\Exception\MethodNotImplementedException;
+use OK\Dto\Repository\SearchCollectionInterface;
 
 class AnnotationMapper implements MapperInterface
 {
-    private const INVALID_FIELD = 'invalid';
+    private const INVALID_FIELD = '_INVALID_FIELD_TOKEN';
 
     /**
      * @var AnnotationReader
@@ -41,7 +43,7 @@ class AnnotationMapper implements MapperInterface
      * @throws MapperInvalidTypeException
      * @throws \ReflectionException
      */
-    public function fillObject($object, $data)
+    public function fillObject($object, array $data)
     {
         $reflClass = new \ReflectionClass($object);
 
@@ -52,7 +54,7 @@ class AnnotationMapper implements MapperInterface
                 continue;
             }
 
-            $input = $this->extractValue($data, $annotation->name);
+            $input = $this->extractValue($annotation->name, $data);
 
             if ($input === self::INVALID_FIELD) {
                 continue;
@@ -66,16 +68,16 @@ class AnnotationMapper implements MapperInterface
         return $object;
     }
 
-    private function extractValue(array $data = [], string $key)
+    private function extractValue(string $key, array $data = [])
     {
         $input = array_key_exists($key, $data) ? $data[$key] : self::INVALID_FIELD;
 
-        if($input === self::INVALID_FIELD) {
+        if ($input === self::INVALID_FIELD) {
             $key = $this->camelCaseToSnakeCase($key);
             $input = $data[$key] ?? self::INVALID_FIELD;
         }
 
-        if($input === self::INVALID_FIELD) {
+        if ($input === self::INVALID_FIELD) {
             $key = $this->snakeCaseToCamelCase($key);
             $input = $data[$key] ?? self::INVALID_FIELD;
         }
@@ -113,8 +115,9 @@ class AnnotationMapper implements MapperInterface
      *
      * @return mixed
      * @throws MapperInvalidTypeException
+     * @throws MethodNotImplementedException
      */
-    private function getData($annotation, $value)
+    private function getData(DTO $annotation, $value)
     {
         if ($annotation->relation && $annotation->type) {
             $repository = $this->em->getRepository($annotation->type);
@@ -133,6 +136,7 @@ class AnnotationMapper implements MapperInterface
                         } elseif (is_array($data)) {
                             $object = new $annotation->type;
                             $object = $this->fillObject($object, $data);
+
                             $this->em->persist($object);
                         }
                         if (isset($object)) {
@@ -144,8 +148,11 @@ class AnnotationMapper implements MapperInterface
                 case 'ManyToOne':
                     return $repository->find((int)$value);
                 case 'ManyToMany':
-                    $data =  $this->isValidManyToManyInput($value) ?
-                        $repository->findByIds($value) : [];
+                    if (!($repository instanceof SearchCollectionInterface)) {
+                        throw new MethodNotImplementedException();
+                    }
+
+                    $data =  $this->isValidManyToManyInput($value) ? $repository->findByIds($value) : [];
 
                     return new ArrayCollection($data);
             }

@@ -10,5 +10,5 @@ interface MapperInterface
      *
      * @return mixed
      */
-    public function fillObject($object, $data);
+    public function fillObject($object, array $data);
 }
