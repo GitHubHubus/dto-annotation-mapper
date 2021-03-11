@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Helper\Exception;
+namespace OK\Dto\Exception;
 
 class MapperInvalidTypeException extends \Exception
 {

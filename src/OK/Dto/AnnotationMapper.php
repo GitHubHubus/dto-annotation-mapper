@@ -1,13 +1,13 @@
 <?php
 
-namespace App\Helper;
+namespace OK\Dto;
 
 use Doctrine\Common\Annotations\AnnotationReader;
 use Doctrine\Common\Annotations\Reader;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\EntityManagerInterface;
-use App\Helper\Annotation\DTO;
-use App\Helper\Exception\MapperInvalidTypeException;
+use OK\Dto\Annotation\DTO;
+use OK\Dto\Exception\MapperInvalidTypeException;
 
 class AnnotationMapper implements MapperInterface
 {

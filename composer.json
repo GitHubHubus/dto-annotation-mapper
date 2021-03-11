@@ -3,7 +3,7 @@
   "type": "library",
   "description": "Data mapper ",
   "keywords": ["mapper", "dto", "filling data", "api", "doctrine", "symfony"],
-  "homepage": "https://github.com/GitHubHubus/ipstack-client",
+  "homepage": "https://github.com/GitHubHubus/dto",
   "authors": [
     {
       "name": "Oleg Kochetkov",
@@ -19,7 +19,7 @@
   },
   "autoload": {
     "psr-0": {
-      "OK\\Ipstack\\": "src/"
+      "OK\\Dto\\": "src/"
     }
   },
   "autoload-dev": {

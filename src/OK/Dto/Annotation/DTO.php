@@ -1,6 +1,9 @@
 <?php
 
-namespace App\Helper\Annotation;
+namespace OK\Dto\Annotation;
+
+use Doctrine\Common\Annotations\Annotation;
+use Doctrine\Common\Annotations\Annotation\Target;
 
 /**
  * @Annotation
