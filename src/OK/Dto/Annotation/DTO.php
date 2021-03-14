@@ -6,6 +6,8 @@ use Doctrine\Common\Annotations\Annotation;
 use Doctrine\Common\Annotations\Annotation\Target;
 
 /**
+ * @author Oleg Kochetkov <oleg.kochetkov999@yandex.ru>
+ *
  * @Annotation
  * @Target({"METHOD"})
  */

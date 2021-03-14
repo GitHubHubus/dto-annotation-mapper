@@ -2,6 +2,9 @@
 
 namespace OK\Dto;
 
+/**
+ * @author Oleg Kochetkov <oleg.kochetkov999@yandex.ru>
+ */
 interface MapperInterface
 {
     /**

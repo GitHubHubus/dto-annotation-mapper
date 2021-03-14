@@ -4,6 +4,9 @@ namespace OK\Dto\Repository;
 
 use Doctrine\ORM\EntityRepository as DoctrineEntityRepository;
 
+/**
+ * @author Oleg Kochetkov <oleg.kochetkov999@yandex.ru>
+ */
 class EntityRepository extends DoctrineEntityRepository implements SearchCollectionInterface
 {
     public function findByIds(array $ids = []): array

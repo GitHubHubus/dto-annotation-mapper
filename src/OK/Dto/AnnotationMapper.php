@@ -11,6 +11,9 @@ use OK\Dto\Exception\MapperInvalidTypeException;
 use OK\Dto\Exception\MethodNotImplementedException;
 use OK\Dto\Repository\SearchCollectionInterface;
 
+/**
+ * @author Oleg Kochetkov <oleg.kochetkov999@yandex.ru>
+ */
 class AnnotationMapper implements MapperInterface
 {
     private const INVALID_FIELD = '_INVALID_FIELD_TOKEN';
@@ -179,8 +182,11 @@ class AnnotationMapper implements MapperInterface
     private function isValidManyToManyInput($input): bool
     {
         $value = is_array($input) ? $input : (array)$input;
-        $firstValue = reset($value);
 
-        return is_numeric($firstValue);
+        if (empty($value)) {
+            return false;
+        }
+
+        return count($value) === count(array_filter($value, 'is_int'));
     }
 }
