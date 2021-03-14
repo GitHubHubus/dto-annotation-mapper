@@ -7,6 +7,7 @@ use Doctrine\Common\Annotations\Reader;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\EntityManagerInterface;
 use OK\Dto\Annotation\DTO;
+use OK\Dto\Exception\InvalidInputTypeException;
 use OK\Dto\Exception\MapperInvalidTypeException;
 use OK\Dto\Exception\MethodNotImplementedException;
 use OK\Dto\Repository\SearchCollectionInterface;
@@ -63,7 +64,10 @@ class AnnotationMapper implements MapperInterface
                 continue;
             }
 
-            $value = $this->getData($annotation, $input);
+            $value = ($annotation->relation && $annotation->type) ?
+                $this->getCustomData($annotation, $input) :
+                $this->getSimpleData($annotation, $input);
+
             $methodName = $method->getName();
             $object->$methodName($value);
         }
@@ -90,6 +94,10 @@ class AnnotationMapper implements MapperInterface
 
     private function camelCaseToSnakeCase(string $string): string
     {
+        if (empty($string)) {
+            return '';
+        }
+
         $parts = preg_split('/(?=[A-Z])/', $string, -1, PREG_SPLIT_NO_EMPTY);
         $new = array_shift($parts);
 
@@ -128,62 +136,134 @@ class AnnotationMapper implements MapperInterface
      * @throws MapperInvalidTypeException
      * @throws MethodNotImplementedException
      */
-    private function getData(DTO $annotation, $value)
+    private function getCustomData(DTO $annotation, $value)
     {
-        if ($annotation->relation && $annotation->type) {
-            $repository = $this->em->getRepository($annotation->type);
+        $repository = $this->em->getRepository($annotation->type);
 
-            switch ($annotation->relation) {
-                case 'OneToMany':
-                    $collection = new ArrayCollection();
+        switch ($annotation->relation) {
+            case 'OneToMany':
+                $collection = new ArrayCollection();
 
-                    if (is_string($value)) {
-                        $value = json_decode($value, true);
+                if (is_string($value)) {
+                    $value = json_decode($value, true);
+                }
+
+                foreach ($value as $data) {
+                    if (is_numeric($data)) {
+                        $object = $repository->find((int)$data);
+                    } elseif (is_array($data)) {
+                        $object = new $annotation->type;
+                        $object = $this->fillObject($object, $data);
+
+                        $this->em->persist($object);
                     }
-
-                    foreach ($value as $data) {
-                        if (is_numeric($data)) {
-                            $object = $repository->find((int)$data);
-                        } elseif (is_array($data)) {
-                            $object = new $annotation->type;
-                            $object = $this->fillObject($object, $data);
-
-                            $this->em->persist($object);
-                        }
-                        if (isset($object)) {
-                            $collection->add($object);
-                        }
+                    if (isset($object)) {
+                        $collection->add($object);
                     }
+                }
 
-                    return $collection;
-                case 'ManyToOne':
-                    return $repository->find((int)$value);
-                case 'ManyToMany':
-                    if (!($repository instanceof SearchCollectionInterface)) {
-                        throw new MethodNotImplementedException();
-                    }
+                return $collection;
+            case 'ManyToOne':
+                return $repository->find((int)$value);
+            case 'ManyToMany':
+                if (!($repository instanceof SearchCollectionInterface)) {
+                    throw new MethodNotImplementedException();
+                }
 
-                    $data =  $this->isValidManyToManyInput($value) ? $repository->findByIds($value) : [];
+                $data =  $this->isValidManyToManyInput($value) ? $repository->findByIds($value) : [];
 
-                    return new ArrayCollection($data);
-            }
-        } else {
-            switch ($annotation->type) {
-                case 'float':
-                    return (float)$value;
-                case 'int':
-                case 'integer':
-                    return (int)$value;
-                case 'string':
-                    return $value;
-                case 'bool':
-                case 'boolean':
-                    return (bool)$value;
-                case 'datetime':
+                return new ArrayCollection($data);
+        }
+    }
+
+    /**
+     * @param DTO $annotation
+     * @param mixed $value
+     *
+     * @return mixed
+     * @throws MapperInvalidTypeException
+     */
+    private function getSimpleData(DTO $annotation, $value)
+    {
+        if (is_null($value)) {
+            return null;
+        }
+
+        switch ($annotation->type) {
+            case 'float':
+                if (is_bool($value)) {
+                    throw $this->createException($annotation, 'boolean');
+                }
+
+                if (is_array($value)) {
+                    throw $this->createException($annotation, 'array');
+                }
+
+                if (is_string($value) && !is_numeric($value)) {
+                    throw $this->createException($annotation, 'string');
+                }
+
+                return (float)$value;
+            case 'int':
+            case 'integer':
+                if (is_bool($value)) {
+                    throw $this->createException($annotation, 'boolean');
+                }
+
+                if (is_array($value)) {
+                    throw $this->createException($annotation, 'array');
+                }
+
+                if (is_string($value) && !is_numeric($value)) {
+                    throw $this->createException($annotation, 'string');
+                }
+
+                return (int)$value;
+            case 'string':
+                if (is_bool($value)) {
+                    throw $this->createException($annotation, 'boolean');
+                }
+
+                if (is_array($value)) {
+                    throw $this->createException($annotation, 'array');
+                }
+
+                return (string)$value;
+            case 'bool':
+            case 'boolean':
+                if (is_array($value)) {
+                    throw $this->createException($annotation, 'array');
+                }
+
+                if (is_string($value) && !in_array($value, ['0', '1', 'true', 'false'])) {
+                    throw $this->createException($annotation, 'string');
+                }
+
+                return (bool)$value;
+            case 'datetime':
+                if (is_bool($value)) {
+                    throw $this->createException($annotation, 'boolean');
+                }
+
+                if (is_array($value)) {
+                    throw $this->createException($annotation, 'array');
+                }
+
+                if (is_integer($value)) {
+                    throw $this->createException($annotation, 'integer');
+                }
+
+                if (is_float($value)) {
+                    throw $this->createException($annotation, 'float');
+                }
+
+                try {
                     return new \DateTime($value);
-                default:
-                    throw new MapperInvalidTypeException(sprintf('Undefined type %s', $annotation->type));
-            }
+                } catch (\Throwable $exception) {
+                    throw new InvalidInputTypeException('Datetime create exception: ' . $exception->getMessage());
+                }
+            default:
+                throw new MapperInvalidTypeException(sprintf('Undefined type %s', $annotation->type));
         }
     }
 
@@ -196,5 +276,16 @@ class AnnotationMapper implements MapperInterface
         }
 
         return count($value) === count(array_filter($value, 'is_int'));
+    }
+
+    private function createException(DTO $annotation, string $type): InvalidInputTypeException
+    {
+        return new InvalidInputTypeException(
+                sprintf('Waiting type %s, %s passed to $s',
+                    $annotation->type,
+                    $type,
+                    $annotation->name
+                )
+        );
     }
 }
