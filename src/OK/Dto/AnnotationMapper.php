@@ -102,8 +102,16 @@ class AnnotationMapper implements MapperInterface
 
     private function snakeCaseToCamelCase(string $string): string
     {
+        if (empty($string)) {
+            return '';
+        }
+
         $parts = explode('_', $string);
         $new = array_shift($parts);
+
+        if (empty($new)) {
+            $new = array_shift($parts);
+        }
 
         foreach($parts as $part) {
             $new .= ucfirst($part);
