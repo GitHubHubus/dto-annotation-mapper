@@ -148,15 +148,31 @@ class AnnotationMapper implements MapperInterface
                     $value = json_decode($value, true);
                 }
 
+                if (!is_array($value)) {
+                    $value = empty($value) ? [] : [$value];
+                }
+
                 foreach ($value as $data) {
+                    $object = null;
+
                     if (is_numeric($data)) {
                         $object = $repository->find((int)$data);
                     } elseif (is_array($data)) {
                         $object = new $annotation->type;
-                        $object = $this->fillObject($object, $data);
 
-                        $this->em->persist($object);
+                        try {
+                            $object = $this->fillObject($object, $data);
+
+                            $this->em->persist($object);
+                        } catch (MapperInvalidTypeException $ex) {
+                            $object = null;
+                        } catch (\ReflectionException $ex) {
+                            $object = null;
+                        }
+                    } else {
+                        throw new InvalidInputTypeException('Waiting type int|array, invalid type passed to ' . $annotation->name);
                     }
+
                     if (isset($object)) {
                         $collection->add($object);
                     }
@@ -164,6 +180,10 @@ class AnnotationMapper implements MapperInterface
 
                 return $collection;
             case 'ManyToOne':
+                if (!is_numeric($value)) {
+                    throw new InvalidInputTypeException('Waiting type int|numreic string, invalid type passed to ' . $annotation->name);
+                }
+
                 return $repository->find((int)$value);
             case 'ManyToMany':
                 if (!($repository instanceof SearchCollectionInterface)) {

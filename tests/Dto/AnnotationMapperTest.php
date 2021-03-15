@@ -3,10 +3,14 @@
 namespace Tests\Dto;
 
 use Doctrine\Common\Annotations\AnnotationReader;
+use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\EntityManager;
+use Doctrine\ORM\EntityRepository;
 use OK\Dto\Annotation\DTO;
 use OK\Dto\AnnotationMapper;
 use OK\Dto\Exception\InvalidInputTypeException;
+use Tests\Entity\Material;
+use Tests\Entity\Product;
 use Tests\TestCase;
 
 /**
@@ -326,6 +330,100 @@ class AnnotationMapperTest extends TestCase
             ['test', 'Exception'],
             [[], 'Exception'],
             [[1], 'Exception'],
+        ];
+    }
+
+    /**
+     * @dataProvider getCustomDataOneToManyProvider
+     */
+    public function testGetCustomDataOneToMany($input, $result, $entities, $exception = false)
+    {
+        $annotation = new DTO();
+        $annotation->type = 'Tests\Entity\Material';
+        $annotation->relation = 'OneToMany';
+
+        $map = [
+            [1, null, null, $entities[1]],
+            [2, null, null, $entities[2]],
+            [3, null, null, $entities[3]]
+        ];
+
+        $mockRep = $this->createMock(EntityRepository::class);
+        $mockRep->method('find')->will($this->returnValueMap($map));
+
+        $mockEm = $this->createMock(EntityManager::class);
+        $mockEm->method('getRepository')->willReturn($mockRep);
+
+        $mapper = new AnnotationMapper(new AnnotationReader(), $mockEm);
+
+        $method = $this->makeCallable($mapper, 'getCustomData');
+
+        if ($exception) {
+            $this->expectException(InvalidInputTypeException::class);
+        }
+
+        $this->assertEquals($result, $method->invokeArgs($mapper, [$annotation, $input]));
+    }
+
+    public function getCustomDataOneToManyProvider()
+    {
+        $entities = [
+            1 => new Material(1, 'm1'),
+            2 => new Material(2, 'm2'),
+            3 => new Material(3, 'm3')
+        ];
+
+        return [
+            ['1', new ArrayCollection([$entities[1]]), $entities],
+            [1, new ArrayCollection([$entities[1]]), $entities],
+            [[1, 2], new ArrayCollection([$entities[1], $entities[2]]), $entities],
+            [[1, 4], new ArrayCollection([$entities[1]]), $entities],
+            ['[1, 2]', new ArrayCollection([$entities[1], $entities[2]]), $entities],
+            ['["1", "2"]', new ArrayCollection([$entities[1], $entities[2]]), $entities],
+            ['[1, "f"]', new ArrayCollection([$entities[1]]), $entities, true],
+            [[['id' => 3, 'name' => 'm3']], new ArrayCollection([$entities[3]]), $entities],
+            [[2, ['id' => 3, 'name' => 'm3']], new ArrayCollection([$entities[2], $entities[3]]), $entities],
+            [[null, ['id' => 3, 'name' => 'm3']], new ArrayCollection([$entities[3]]), $entities, true],
+            [[true, ['id' => 3, 'name' => 'm3']], new ArrayCollection([$entities[3]]), $entities, true]
+        ];
+    }
+
+    /**
+     * @dataProvider getCustomDataManyToOneProvider
+     */
+    public function testGetCustomDataManyToOne($input, $result, $exception = false)
+    {
+        $annotation = new DTO();
+        $annotation->type = 'Tests\Entity\Material';
+        $annotation->relation = 'ManyToOne';
+
+        $mockRep = $this->createMock(EntityRepository::class);
+        $mockRep->method('find')->willReturn(new Material(1, 'm1'));
+
+        $mockEm = $this->createMock(EntityManager::class);
+        $mockEm->method('getRepository')->willReturn($mockRep);
+
+        $mapper = new AnnotationMapper(new AnnotationReader(), $mockEm);
+
+        $method = $this->makeCallable($mapper, 'getCustomData');
+
+        if ($exception) {
+            $this->expectException(InvalidInputTypeException::class);
+        }
+
+        $this->assertEquals($result, $method->invokeArgs($mapper, [$annotation, $input]));
+    }
+
+    public function getCustomDataManyToOneProvider()
+    {
+        return [
+            ['1', new Material(1, 'm1')],
+            [1, new Material(1, 'm1')],
+            [true, null, true],
+            [null, null, true],
+            ['f', null, true],
+            [[], null, true],
+            [[1], null, true],
         ];
     }
 
