@@ -6,11 +6,14 @@ use Doctrine\Common\Annotations\AnnotationReader;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityRepository;
+use Doctrine\ORM\Mapping\ClassMetadata;
 use OK\Dto\Annotation\DTO;
 use OK\Dto\AnnotationMapper;
 use OK\Dto\Exception\InvalidInputTypeException;
+use OK\Dto\Exception\MethodNotImplementedException;
 use Tests\Entity\Material;
-use Tests\Entity\Product;
+use Tests\Repository\ExtendedEntityRepository;
+use Tests\Repository\InvalidEntityRepository;
 use Tests\TestCase;
 
 /**
@@ -32,15 +35,8 @@ class AnnotationMapperTest extends TestCase
     public function isValidManyToManyInputProvider()
     {
         return [
-            ['', false],
-            [null, false],
-            [1, true],
-            ['2', false],
-            ['f', false],
-            [true, false],
-            [false, false],
             [['1', 2, 3], false],
-            [[0, 1, 2], true],
+            [[0, 1, 2], false],
             [[2, 3, true], false],
             [[2, 3, 'g'], false],
         ];
@@ -425,6 +421,37 @@ class AnnotationMapperTest extends TestCase
             [[], null, true],
             [[1], null, true],
         ];
+    }
+
+    public function testGetCustomDataManyToManyValidRepository()
+    {
+        $annotation = new DTO();
+        $annotation->type = 'Tests\Entity\Material';
+        $annotation->relation = 'ManyToMany';
+
+        $mockEm = $this->createMock(EntityManager::class);
+        $mockRep = new ExtendedEntityRepository($mockEm, new ClassMetadata(Material::class));
+        $mockEm->method('getRepository')->willReturn($mockRep);
+        $mapper = new AnnotationMapper(new AnnotationReader(), $mockEm);
+        $method = $this->makeCallable($mapper, 'getCustomData');
+
+        $this->assertEquals(new ArrayCollection(), $method->invokeArgs($mapper, [$annotation, [1]]));
+    }
+
+    public function testGetCustomDataManyToManyInvalidRepository()
+    {
+        $annotation = new DTO();
+        $annotation->type = 'Tests\Entity\Material';
+        $annotation->relation = 'ManyToMany';
+
+        $mockEm = $this->createMock(EntityManager::class);
+        $mockRep = new InvalidEntityRepository($mockEm, new ClassMetadata(Material::class));
+        $mockEm->method('getRepository')->willReturn($mockRep);
+        $mapper = new AnnotationMapper(new AnnotationReader(), $mockEm);
+        $method = $this->makeCallable($mapper, 'getCustomData');
+
+        $this->expectException(MethodNotImplementedException::class);
+        $method->invokeArgs($mapper, [$annotation, [1]]);
     }
 
     private function getSimpleMapperMock()

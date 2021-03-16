@@ -190,6 +190,10 @@ class AnnotationMapper implements MapperInterface
                     throw new MethodNotImplementedException();
                 }
 
+                if (!is_array($value)) {
+                    $value = [$value];
+                }
+
                 $data =  $this->isValidManyToManyInput($value) ? $repository->findByIds($value) : [];
 
                 return new ArrayCollection($data);
@@ -287,10 +291,8 @@ class AnnotationMapper implements MapperInterface
         }
     }
 
-    private function isValidManyToManyInput($input): bool
+    private function isValidManyToManyInput(array $input): bool
     {
-        $value = is_array($input) ? $input : (array)$input;
-
         if (empty($value)) {
             return false;
         }
