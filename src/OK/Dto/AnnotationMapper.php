@@ -313,11 +313,11 @@ class AnnotationMapper implements MapperInterface
 
     private function isValidManyToManyInput(array $input): bool
     {
-        if (empty($value)) {
+        if (empty($input)) {
             return false;
         }
 
-        return count($value) === count(array_filter($value, 'is_int'));
+        return count($input) === count(array_filter($input, 'is_int'));
     }
 
     private function createException(DTO $annotation, string $type): InvalidInputTypeException
