@@ -7,6 +7,7 @@ use Doctrine\Common\Annotations\Reader;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\EntityManagerInterface;
 use OK\Dto\Annotation\DTO;
+use OK\Dto\Exception\EntityManagerNotExistsException;
 use OK\Dto\Exception\InvalidInputTypeException;
 use OK\Dto\Exception\MapperInvalidTypeException;
 use OK\Dto\Exception\MethodNotImplementedException;
@@ -29,11 +30,7 @@ class AnnotationMapper implements MapperInterface
      */
     private $em;
 
-    /**
-     * @param Reader $reader
-     * @param EntityManagerInterface $em
-     */
-    public function __construct(Reader $reader, EntityManagerInterface $em)
+    public function __construct(Reader $reader, ?EntityManagerInterface $em = null)
     {
         $this->reader = $reader;
         $this->em = $em;
@@ -135,9 +132,14 @@ class AnnotationMapper implements MapperInterface
      * @return mixed
      * @throws MapperInvalidTypeException
      * @throws MethodNotImplementedException
+     * @throws EntityManagerNotExistsException
      */
     private function getCustomData(DTO $annotation, $value)
     {
+        if ($this->em === null) {
+            throw new EntityManagerNotExistsException();
+        }
+
         $repository = $this->em->getRepository($annotation->type);
 
         switch ($annotation->relation) {

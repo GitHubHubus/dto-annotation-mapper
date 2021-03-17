@@ -9,6 +9,7 @@ use Doctrine\ORM\EntityRepository;
 use Doctrine\ORM\Mapping\ClassMetadata;
 use OK\Dto\Annotation\DTO;
 use OK\Dto\AnnotationMapper;
+use OK\Dto\Exception\EntityManagerNotExistsException;
 use OK\Dto\Exception\InvalidInputTypeException;
 use OK\Dto\Exception\MethodNotImplementedException;
 use Tests\Entity\Material;
@@ -487,10 +488,21 @@ class AnnotationMapperTest extends TestCase
         $method->invokeArgs($mapper, [$annotation, [1]]);
     }
 
+    public function testGetCustomDataWithoutEntityManager()
+    {
+        $annotation = new DTO();
+        $annotation->type = 'Tests\Entity\Material';
+        $annotation->relation = 'ManyToMany';
+
+        $mapper = new AnnotationMapper(new AnnotationReader());
+        $method = $this->makeCallable($mapper, 'getCustomData');
+
+        $this->expectException(EntityManagerNotExistsException::class);
+        $method->invokeArgs($mapper, [$annotation, [1]]);
+    }
+
     private function getSimpleMapperMock()
     {
-        $mockEm = $this->createMock(EntityManager::class);
-
-        return new AnnotationMapper(new AnnotationReader(), $mockEm);
+        return new AnnotationMapper(new AnnotationReader());
     }
 }

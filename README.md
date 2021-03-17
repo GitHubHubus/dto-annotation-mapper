@@ -110,6 +110,15 @@ vendor/bin/phpunit tests
 
 ## Information
 
+### Using only simple types
+If you don't use `Doctrine\orm` you could use this mapper anyway.
+
+Just create mapper without the second parameter and with you own `Reader` implementation if need.
+```php
+new \OK\Dto\AnnotationMapper(new \Doctrine\Common\Annotations\AnnotationReader());
+```
+And then you can use only the simple types.
+
 ### Case sensitivity 
 You can use both `snake_case` and `camelCase` in `name` field and mapper will check both of variants in dataset if doesn't find the strict key. For example:
 If you have annotation:
@@ -118,7 +127,7 @@ If you have annotation:
 ```
 and dataset:
 ```php
-$data = ['customer_number'];
+$data = ['customer_number' => 123];
 ``` 
 
 It's fine. At first mapper check the strict name `customerNumber`, then (if name doesn't exist) transforms name to `customer_number` and check it again.
