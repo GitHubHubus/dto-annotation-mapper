@@ -133,9 +133,32 @@ $data = ['customer_number' => 123];
 It's fine. At first mapper check the strict name `customerNumber`, then (if name doesn't exist) transforms name to `customer_number` and check it again.
 It works other way too (from `snake_case` to `camelCase`).
 
+### Several naming 
+If you need to have several names for one `Dto` annotation just list them via `|` delimiter and then you can use different name in data for different cases:
+```php
+@DTO(name="customerNumber|userNumber|managerNumber", type="string")
+```
+If in dataset existed more then one from this set of names, then mapper will return first found.
+
 ### Using ManyToMany relation
 For using `ManyToMany` relation you need to implement `OK\Dto\Repository\SearchCollectionInterface` for you entity repository or you can just extends from `OK\Dto\Repository\EntityRepository`
 
+### Using OneToMany relation
+Here are two ways to use this relation:
+
+The first one when related entity existed then you need to pass array of id to dataset:
+```php
+$data = ['customers' => [1,2,3]];
+```
+Another way when you need to create new Entity, then you need to pass data to create:
+```php
+$data = ['customers' => [['firstName' => 'John', 'lastName' => 'Smith']]];
+```
+
+You can combine both this way in one dataset:
+```php
+$data = ['customers' => [1, 2, ['firstName' => 'John', 'lastName' => 'Smith']];
+```
 
 ## License
 

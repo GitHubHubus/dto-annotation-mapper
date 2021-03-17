@@ -104,6 +104,10 @@ class AnnotationMapperTest extends TestCase
     {
         return [
             [['testkey' => 'value'], 'testkey', 'value'],
+            [['testkey' => 'value'], 'testkey|invalidTestKey', 'value'],
+            [['testkey' => 'value'], 'invalidTestKey|testkey', 'value'],
+            [['testkey' => 'value', 'testkey2' => 'value2'], 'testkey|testKey2', 'value'],
+            [['testKey3' => 'value'], 'testkey|testKey2|testKey3', 'value'],
             [['testKey' => 'value'], 'testKey', 'value'],
             [['testKey' => 'value'], 'test_key', 'value'],
             [['test_key' => 'value'], 'test_key', 'value'],

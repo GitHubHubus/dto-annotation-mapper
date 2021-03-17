@@ -74,16 +74,28 @@ class AnnotationMapper implements MapperInterface
 
     private function extractValue(string $key, array $data = [])
     {
-        $input = array_key_exists($key, $data) ? $data[$key] : self::INVALID_FIELD;
+        if (strrpos($key, '|') !== false) {
+            $keys = explode('|', $key);
 
-        if ($input === self::INVALID_FIELD) {
-            $key = $this->camelCaseToSnakeCase($key);
-            $input = $data[$key] ?? self::INVALID_FIELD;
-        }
+            foreach ($keys as $k) {
+                $input = $this->extractValue($k, $data);
 
-        if ($input === self::INVALID_FIELD) {
-            $key = $this->snakeCaseToCamelCase($key);
-            $input = $data[$key] ?? self::INVALID_FIELD;
+                if ($input !== self::INVALID_FIELD) {
+                    break;
+                }
+            }
+        } else {
+            $input = array_key_exists($key, $data) ? $data[$key] : self::INVALID_FIELD;
+
+            if ($input === self::INVALID_FIELD) {
+                $key = $this->camelCaseToSnakeCase($key);
+                $input = $data[$key] ?? self::INVALID_FIELD;
+            }
+
+            if ($input === self::INVALID_FIELD) {
+                $key = $this->snakeCaseToCamelCase($key);
+                $input = $data[$key] ?? self::INVALID_FIELD;
+            }
         }
 
         return $input;
