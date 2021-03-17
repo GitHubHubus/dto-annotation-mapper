@@ -97,8 +97,24 @@ You can use any class as type and then you need to specify `relation`: ManyToOne
 ## Testing
 
 ``` bash
-composer test
+composer install
+vendor/bin/phpunit tests
 ```
+
+## Information
+
+You can use both `snake_case` and `camelCase` in `name` field and mapper will check both of variants in dataset if doesn't find the strict key. For example:
+If you have annotation:
+```php
+@DTO(name="customerNumber", type="string")
+```
+and dataset:
+```php
+$data = ['customer_number'];
+``` 
+
+It's fine. At first mapper check the strict name `customerNumber`, then (if name doesn't exist) transforms name to `customer_number` and check it again.
+It works other way too (from `snake_case` to `camelCase`).
 
 ## License
 
