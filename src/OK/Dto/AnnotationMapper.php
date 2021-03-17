@@ -194,6 +194,10 @@ class AnnotationMapper implements MapperInterface
 
                 return $collection;
             case 'ManyToOne':
+                if ($value === null) {
+                    return null;
+                }
+
                 if (!is_numeric($value)) {
                     throw new InvalidInputTypeException('Waiting type int|numreic string, invalid type passed to ' . $annotation->name);
                 }
