@@ -6,6 +6,13 @@
 
 This library intended for auto fill entity object from input dataset based on annotations.
 
+## Purpose
+This library could be useful if you have several cases, when you fill entity from an array data.
+
+For example, you retrieve data from client and create new entity and another way you get this entity from import file.
+
+Instead of create separate services to filling entity from array data set you could just specify entity fields for filling and pass only those properties which you need.
+
 ## Installation
 
 You can install the package via composer:
@@ -90,9 +97,9 @@ Then just pass input data with object to `fillObject` method in controller like 
 ```
 That's it! Your entity will updated with new data.
 
-Available simple types: string|float|bool|boolean|int|integer|datetime.
+Available simple types: `string`, `float`, `bool`, `boolean`, `int`, `integer`, `datetime`, `array`. Trying to use other types without `relation` will throw the `OK\Dto\Exception\MapperInvalidTypeException`.
 
-You can use any class as type and then you need to specify `relation`: ManyToOne|OneToMany|ManyToMany
+You can use any entity class as type, you just need to specify `relation` for it: `ManyToOne`, `OneToMany`, `ManyToMany`
 
 ## Testing
 
@@ -103,6 +110,7 @@ vendor/bin/phpunit tests
 
 ## Information
 
+### Case sensitivity 
 You can use both `snake_case` and `camelCase` in `name` field and mapper will check both of variants in dataset if doesn't find the strict key. For example:
 If you have annotation:
 ```php
@@ -115,6 +123,10 @@ $data = ['customer_number'];
 
 It's fine. At first mapper check the strict name `customerNumber`, then (if name doesn't exist) transforms name to `customer_number` and check it again.
 It works other way too (from `snake_case` to `camelCase`).
+
+### Using ManyToMany relation
+For using `ManyToMany` relation you need to implement `OK\Dto\Repository\SearchCollectionInterface` for you entity repository or you can just extends from `OK\Dto\Repository\EntityRepository`
+
 
 ## License
 

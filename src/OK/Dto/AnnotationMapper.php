@@ -286,6 +286,8 @@ class AnnotationMapper implements MapperInterface
                 } catch (\Throwable $exception) {
                     throw new InvalidInputTypeException('Datetime create exception: ' . $exception->getMessage());
                 }
+            case 'array':
+                return is_array($value) ? $value : [$value];
             default:
                 throw new MapperInvalidTypeException(sprintf('Undefined type %s', $annotation->type));
         }

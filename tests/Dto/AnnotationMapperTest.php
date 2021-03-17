@@ -294,6 +294,39 @@ class AnnotationMapperTest extends TestCase
     }
 
     /**
+     * @dataProvider getSimpleDataArrayProvider
+     */
+    public function testGetDataArray($value, $result)
+    {
+        $annotation = new DTO();
+        $annotation->type = 'array';
+
+        $mapper = $this->getSimpleMapperMock();
+        $method = $this->makeCallable($mapper, 'getSimpleData');
+
+        if ($result === 'Exception') {
+            $this->expectException(InvalidInputTypeException::class);
+        }
+
+        $this->assertEquals($result, $method->invokeArgs($mapper, [$annotation, $value]));
+    }
+
+    public function getSimpleDataArrayProvider()
+    {
+        $date = new \DateTime();
+
+        return [
+            ['1', ['1']],
+            [$date, [$date]],
+            [1, [1]],
+            [null, null],
+            [false, [false]],
+            [[], []],
+            [[1, '2'], [1, '2']],
+        ];
+    }
+
+    /**
      * @dataProvider getSimpleDataDatetimeProvider
      */
     public function testGetDataDatetime($value, $result)
