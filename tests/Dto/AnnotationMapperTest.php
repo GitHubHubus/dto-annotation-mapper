@@ -11,6 +11,7 @@ use OK\Dto\Annotation\DTO;
 use OK\Dto\AnnotationMapper;
 use OK\Dto\Exception\EntityManagerNotExistsException;
 use OK\Dto\Exception\InvalidInputTypeException;
+use OK\Dto\Exception\MapperInvalidRelationException;
 use OK\Dto\Exception\MethodNotImplementedException;
 use Tests\Entity\Material;
 use Tests\Repository\ExtendedEntityRepository;
@@ -502,6 +503,22 @@ class AnnotationMapperTest extends TestCase
         $method = $this->makeCallable($mapper, 'getCustomData');
 
         $this->expectException(EntityManagerNotExistsException::class);
+        $method->invokeArgs($mapper, [$annotation, [1]]);
+    }
+
+    public function testGetCustomDataInvalidRelation()
+    {
+        $annotation = new DTO();
+        $annotation->type = 'Tests\Entity\Material';
+        $annotation->relation = 'ManyToMany2';
+
+        $mockEm = $this->createMock(EntityManager::class);
+        $mockRep = new InvalidEntityRepository($mockEm, new ClassMetadata(Material::class));
+        $mockEm->method('getRepository')->willReturn($mockRep);
+        $mapper = new AnnotationMapper(new AnnotationReader(), $mockEm);
+        $method = $this->makeCallable($mapper, 'getCustomData');
+
+        $this->expectException(MapperInvalidRelationException::class);
         $method->invokeArgs($mapper, [$annotation, [1]]);
     }
 

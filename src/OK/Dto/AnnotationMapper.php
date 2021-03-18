@@ -9,6 +9,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use OK\Dto\Annotation\DTO;
 use OK\Dto\Exception\EntityManagerNotExistsException;
 use OK\Dto\Exception\InvalidInputTypeException;
+use OK\Dto\Exception\MapperInvalidRelationException;
 use OK\Dto\Exception\MapperInvalidTypeException;
 use OK\Dto\Exception\MethodNotImplementedException;
 use OK\Dto\Repository\SearchCollectionInterface;
@@ -215,6 +216,8 @@ class AnnotationMapper implements MapperInterface
                 $data =  $this->isValidManyToManyInput($value) ? $repository->findByIds($value) : [];
 
                 return new ArrayCollection($data);
+            default:
+                throw new MapperInvalidRelationException(sprintf('Undefined relation type %s', $annotation->relation));
         }
     }
 
