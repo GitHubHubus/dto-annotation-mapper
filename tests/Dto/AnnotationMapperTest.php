@@ -37,7 +37,7 @@ class AnnotationMapperTest extends TestCase
     {
         return [
             [['1', 2, 3], false],
-            [[0, 1, 2], false],
+            [[0, 1, 2], true],
             [[2, 3, true], false],
             [[2, 3, 'g'], false],
         ];
@@ -454,7 +454,7 @@ class AnnotationMapperTest extends TestCase
             ['1', new Material(1, 'm1')],
             [1, new Material(1, 'm1')],
             [true, null, true],
-            [null, null, true],
+            [null, null, false],
             ['f', null, true],
             [[], null, true],
             [[1], null, true],
