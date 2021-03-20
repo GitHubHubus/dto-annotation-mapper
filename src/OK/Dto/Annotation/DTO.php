@@ -17,6 +17,9 @@ class DTO
     public $type = null;
 
     /** @var string */
+    public $property = null;
+
+    /** @var string */
     public $name = null;
 
     /** @var string */

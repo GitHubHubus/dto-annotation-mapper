@@ -119,6 +119,16 @@ new \OK\Dto\AnnotationMapper(new \Doctrine\Common\Annotations\AnnotationReader()
 ```
 And then you can use only the simple types.
 
+### Basic usage
+All useful information will be retrieved from `Doctrine` annotations if `property` set or `type` is not set in `DTO` annotation.
+
+
+```php
+@DTO(name="material")
+
+@DTO(name="material_name", property="material")
+```
+
 ### Case sensitivity 
 You can use both `snake_case` and `camelCase` in `name` field and mapper will check both of variants in dataset if doesn't find the strict key. For example:
 If you have annotation:

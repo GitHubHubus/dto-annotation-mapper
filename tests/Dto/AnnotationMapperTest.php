@@ -11,9 +11,12 @@ use OK\Dto\Annotation\DTO;
 use OK\Dto\AnnotationMapper;
 use OK\Dto\Exception\EntityManagerNotExistsException;
 use OK\Dto\Exception\InvalidInputTypeException;
+use OK\Dto\Exception\InvalidPropertyNameException;
 use OK\Dto\Exception\MapperInvalidRelationException;
 use OK\Dto\Exception\MethodNotImplementedException;
+use OK\Dto\Exception\NotExistValidAnnotationException;
 use Tests\Entity\Material;
+use Tests\Entity\Product;
 use Tests\Repository\ExtendedEntityRepository;
 use Tests\Repository\InvalidEntityRepository;
 use Tests\TestCase;
@@ -520,6 +523,75 @@ class AnnotationMapperTest extends TestCase
 
         $this->expectException(MapperInvalidRelationException::class);
         $method->invokeArgs($mapper, [$annotation, [1]]);
+    }
+
+    /**
+     * @dataProvider createDTOAnnotationFromPropertyProvider
+     */
+    public function testCreateDTOAnnotationFromProperty($property, $result)
+    {
+        $reflClass = new \ReflectionClass(Product::class);
+
+        $mapper = new AnnotationMapper(new AnnotationReader());
+        $method = $this->makeCallable($mapper, 'createDTOAnnotationFromProperty');
+
+        $this->assertEquals($result, $method->invokeArgs($mapper, [$property, $reflClass]));
+    }
+
+    public function createDTOAnnotationFromPropertyProvider()
+    {
+        $dtoFloat = new DTO();
+        $dtoFloat->type = 'float';
+        $dtoFloat->name = 'price';
+
+        $dtoManyToMany = new DTO();
+        $dtoManyToMany->type = Material::class;
+        $dtoManyToMany->name = 'materials';
+        $dtoManyToMany->relation = 'ManyToMany';
+
+        $dtoManyToMany = new DTO();
+        $dtoManyToMany->type = Material::class;
+        $dtoManyToMany->name = 'materials';
+        $dtoManyToMany->relation = 'ManyToMany';
+
+        $dtoManyToOne = new DTO();
+        $dtoManyToOne->type = Material::class;
+        $dtoManyToOne->name = 'material';
+        $dtoManyToOne->relation = 'ManyToOne';
+
+        $dtoOneToMany = new DTO();
+        $dtoOneToMany->type = Material::class;
+        $dtoOneToMany->name = 'materials2';
+        $dtoOneToMany->relation = 'OneToMany';
+
+        return [
+            ['price', $dtoFloat],
+            ['materials', $dtoManyToMany],
+            ['material', $dtoManyToOne],
+            ['materials2', $dtoOneToMany],
+        ];
+    }
+
+    /**
+     * @dataProvider createDTOAnnotationFromPropertyExceptionProvider
+     */
+    public function testCreateDTOAnnotationFromPropertyException($property, $exception)
+    {
+        $reflClass = new \ReflectionClass(Product::class);
+
+        $mapper = new AnnotationMapper(new AnnotationReader());
+        $method = $this->makeCallable($mapper, 'createDTOAnnotationFromProperty');
+
+        $this->expectException($exception);
+        $method->invokeArgs($mapper, [$property, $reflClass]);
+    }
+
+    public function createDTOAnnotationFromPropertyExceptionProvider()
+    {
+        return [
+            ['article', NotExistValidAnnotationException::class],
+            ['invalid', InvalidPropertyNameException::class]
+        ];
     }
 
     private function getSimpleMapperMock()

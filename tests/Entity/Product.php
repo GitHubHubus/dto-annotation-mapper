@@ -14,6 +14,7 @@ class Product
 {
     /**
      * @var string
+     *
      */
     protected $article;
 
@@ -25,7 +26,7 @@ class Product
     /**
      * @var Material
      *
-     * @ORM\ManyToOne(targetEntity="App\Entity\Product\Options\Material")
+     * @ORM\ManyToOne(targetEntity="Tests\Entity\Material")
      */
     protected $material;
 

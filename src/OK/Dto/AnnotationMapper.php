@@ -6,12 +6,18 @@ use Doctrine\Common\Annotations\AnnotationReader;
 use Doctrine\Common\Annotations\Reader;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ORM\Mapping\Column;
+use Doctrine\ORM\Mapping\ManyToMany;
+use Doctrine\ORM\Mapping\ManyToOne;
+use Doctrine\ORM\Mapping\OneToMany;
 use OK\Dto\Annotation\DTO;
 use OK\Dto\Exception\EntityManagerNotExistsException;
 use OK\Dto\Exception\InvalidInputTypeException;
+use OK\Dto\Exception\InvalidPropertyNameException;
 use OK\Dto\Exception\MapperInvalidRelationException;
 use OK\Dto\Exception\MapperInvalidTypeException;
 use OK\Dto\Exception\MethodNotImplementedException;
+use OK\Dto\Exception\NotExistValidAnnotationException;
 use OK\Dto\Repository\SearchCollectionInterface;
 
 /**
@@ -62,9 +68,24 @@ class AnnotationMapper implements MapperInterface
                 continue;
             }
 
-            $value = ($annotation->relation && $annotation->type) ?
-                $this->getCustomData($annotation, $input) :
-                $this->getSimpleData($annotation, $input);
+            if ($annotation->property || !$annotation->type) {
+                $propertyName = $annotation->property ?? $annotation->name;
+
+                $dto = $this->createDTOAnnotationFromProperty($propertyName, $reflClass);
+
+                $annotation->type = $dto->type;
+                $annotation->relation = $dto->relation;
+            }
+
+            $value = null;
+
+            if ($annotation->relation && $annotation->type) {
+                $value = $this->getCustomData($annotation, $input);
+            } elseif ($annotation->type) {
+                $value = $this->getSimpleData($annotation, $input);
+            } else {
+                throw new NotExistValidAnnotationException('Use type for DTO annotation');
+            }
 
             $methodName = $method->getName();
             $object->$methodName($value);
@@ -332,5 +353,62 @@ class AnnotationMapper implements MapperInterface
                     $annotation->name
                 )
         );
+    }
+
+    private function createDTOAnnotationFromProperty(string $property, \ReflectionClass $reflectionClass): DTO
+    {
+        $dtoAnnotation = new DTO();
+        $dtoAnnotation->name = $property;
+
+        try {
+            $reflProperty = $reflectionClass->getProperty($property);
+        } catch (\ReflectionException $ex) {
+            throw new InvalidPropertyNameException("Property with name '$property' doesn't exist in class " . $reflectionClass->getName());
+        }
+
+        $columnAnnotation = $this->reader->getPropertyAnnotation($reflProperty, Column::class);
+
+        if ($columnAnnotation) {
+            $dtoAnnotation->type = $columnAnnotation->type;
+
+            return $dtoAnnotation;
+        }
+
+        $manyToManyAnnotation = $this->reader->getPropertyAnnotation($reflProperty, ManyToMany::class);
+
+        if ($manyToManyAnnotation) {
+            $dtoAnnotation->relation = 'ManyToMany';
+            $dtoAnnotation->type = $manyToManyAnnotation->targetEntity;
+
+            return $dtoAnnotation;
+        }
+
+        $oneToManyAnnotation = $this->reader->getPropertyAnnotation($reflProperty, OneToMany::class);
+
+        if ($oneToManyAnnotation) {
+            $dtoAnnotation->relation = 'OneToMany';
+            $dtoAnnotation->type = $oneToManyAnnotation->targetEntity;
+
+            return $dtoAnnotation;
+        }
+
+        $manyToOneAnnotation = $this->reader->getPropertyAnnotation($reflProperty, ManyToOne::class);
+
+        if ($manyToOneAnnotation) {
+            $dtoAnnotation->relation = 'ManyToOne';
+            $dtoAnnotation->type = $manyToOneAnnotation->targetEntity;
+
+            return $dtoAnnotation;
+        }
+
+        $message = sprintf(
+            'Use type and relation for DTO annotation or use one of Doctrine annotation (%s, %s, %s, %s) for property',
+            Column::class,
+            ManyToMany::class,
+            ManyToOne::class,
+            OneToMany::class
+        );
+
+        throw new NotExistValidAnnotationException($message);
     }
 }
