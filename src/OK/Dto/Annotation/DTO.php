@@ -13,15 +13,12 @@ use Doctrine\Common\Annotations\Annotation\Target;
  */
 class DTO
 {
-    /** @var string <p>int, float, string, array, bool, datetime</p> */
-    public $type = null;
+    /** @internal <p>int, float, string, array, bool, datetime</p> */
+    public ?string $type = null;
 
-    /** @var string */
-    public $property = null;
+    public ?string $property = null;
 
-    /** @var string */
-    public $name = null;
+    public ?string $name = null;
 
-    /** @var string */
-    public $relation = null;
+    public ?string $relation = null;
 }

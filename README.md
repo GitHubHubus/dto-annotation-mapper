@@ -13,6 +13,12 @@ For example, you retrieve data from client and create new entity and another way
 
 Instead of create separate services to filling entity from array data set you could just specify entity fields for filling and pass only those properties which you need.
 
+
+## Requirements
+
+* PHP 7.4+
+* Doctrine ORM 2+
+
 ## Installation
 
 You can install the package via composer:
@@ -110,6 +116,15 @@ vendor/bin/phpunit tests
 
 ## Information
 
+### Basic usage
+All useful information will be retrieved from `Doctrine` annotations if `property` set or `type` is not set in `DTO` annotation.
+
+```php
+@DTO(name="material")
+
+@DTO(name="material_name", property="material")
+```
+
 ### Using only simple types
 If you don't use `Doctrine\orm` you could use this mapper anyway.
 
@@ -119,15 +134,6 @@ new \OK\Dto\AnnotationMapper(new \Doctrine\Common\Annotations\AnnotationReader()
 ```
 And then you can use only the simple types.
 
-### Basic usage
-All useful information will be retrieved from `Doctrine` annotations if `property` set or `type` is not set in `DTO` annotation.
-
-
-```php
-@DTO(name="material")
-
-@DTO(name="material_name", property="material")
-```
 
 ### Case sensitivity 
 You can use both `snake_case` and `camelCase` in `name` field and mapper will check both of variants in dataset if doesn't find the strict key. For example:

@@ -27,15 +27,9 @@ class AnnotationMapper implements MapperInterface
 {
     private const INVALID_FIELD = '_INVALID_FIELD_TOKEN';
 
-    /**
-     * @var AnnotationReader
-     */
-    private $reader;
+    private Reader $reader;
 
-    /**
-     * @var EntityManagerInterface
-     */
-    private $em;
+    private ?EntityManagerInterface $em;
 
     public function __construct(Reader $reader, ?EntityManagerInterface $em = null)
     {
@@ -96,6 +90,8 @@ class AnnotationMapper implements MapperInterface
 
     private function extractValue(string $key, array $data = [])
     {
+        $input = null;
+
         if (strrpos($key, '|') !== false) {
             $keys = explode('|', $key);
 
