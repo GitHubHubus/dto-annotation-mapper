@@ -297,7 +297,7 @@ class AnnotationMapper implements MapperInterface
                     throw $this->createException($annotation, 'array');
                 }
 
-                if (is_string($value) && !in_array($value, ['0', '1', 'true', 'false'])) {
+                if (is_string($value) && !in_array($value, ['', '0', '1', 'true', 'false'])) {
                     throw $this->createException($annotation, 'string');
                 }
 

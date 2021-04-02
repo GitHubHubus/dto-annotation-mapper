@@ -297,6 +297,7 @@ class AnnotationMapperTest extends TestCase
             [true, true],
             [false, false],
             ['test', 'Exception'],
+            ['', false],
             [[], 'Exception'],
             [[1], 'Exception'],
         ];
