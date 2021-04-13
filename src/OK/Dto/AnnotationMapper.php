@@ -343,7 +343,7 @@ class AnnotationMapper implements MapperInterface
     private function createException(DTO $annotation, string $type): InvalidInputTypeException
     {
         return new InvalidInputTypeException(
-                sprintf('Waiting type %s, %s passed to $s',
+                sprintf('Waiting type %s, %s passed to %s',
                     $annotation->type,
                     $type,
                     $annotation->name
