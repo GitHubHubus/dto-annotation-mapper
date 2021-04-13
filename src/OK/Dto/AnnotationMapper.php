@@ -2,7 +2,6 @@
 
 namespace OK\Dto;
 
-use Doctrine\Common\Annotations\AnnotationReader;
 use Doctrine\Common\Annotations\Reader;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\EntityManagerInterface;
@@ -28,7 +27,6 @@ class AnnotationMapper implements MapperInterface
     private const INVALID_FIELD = '_INVALID_FIELD_TOKEN';
 
     private Reader $reader;
-
     private ?EntityManagerInterface $em;
 
     public function __construct(Reader $reader, ?EntityManagerInterface $em = null)
@@ -44,6 +42,13 @@ class AnnotationMapper implements MapperInterface
      * @return mixed
      * @throws MapperInvalidTypeException
      * @throws \ReflectionException
+     * @throws InvalidPropertyNameException
+     * @throws NotExistValidAnnotationException
+     * @throws MapperInvalidTypeException
+     * @throws MapperInvalidRelationException
+     * @throws MethodNotImplementedException
+     * @throws EntityManagerNotExistsException
+     * @throws InvalidInputTypeException
      */
     public function fillObject($object, array $data)
     {
@@ -161,6 +166,7 @@ class AnnotationMapper implements MapperInterface
      *
      * @return mixed
      * @throws MapperInvalidTypeException
+     * @throws MapperInvalidRelationException
      * @throws MethodNotImplementedException
      * @throws EntityManagerNotExistsException
      */
@@ -243,7 +249,7 @@ class AnnotationMapper implements MapperInterface
      * @param mixed $value
      *
      * @return mixed
-     * @throws MapperInvalidTypeException
+     * @throws MapperInvalidTypeException|InvalidInputTypeException
      */
     private function getSimpleData(DTO $annotation, $value)
     {
@@ -351,6 +357,9 @@ class AnnotationMapper implements MapperInterface
         );
     }
 
+    /**
+     * @throws InvalidPropertyNameException|NotExistValidAnnotationException
+     */
     private function createDTOAnnotationFromProperty(string $property, \ReflectionClass $reflectionClass): DTO
     {
         $dtoAnnotation = new DTO();
