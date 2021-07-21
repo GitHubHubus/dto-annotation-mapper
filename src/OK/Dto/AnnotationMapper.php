@@ -4,6 +4,7 @@ namespace OK\Dto;
 
 use Doctrine\Common\Annotations\Reader;
 use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Util\ClassUtils;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Mapping\Column;
 use Doctrine\ORM\Mapping\ManyToMany;
@@ -52,7 +53,8 @@ class AnnotationMapper implements MapperInterface
      */
     public function fillObject($object, array $data)
     {
-        $reflClass = new \ReflectionClass($object);
+        $name = ClassUtils::getClass($object);
+        $reflClass = new \ReflectionClass($name);
 
         foreach ($reflClass->getMethods() as $method) {
             $annotation = $this->reader->getMethodAnnotation($method, DTO::class);
